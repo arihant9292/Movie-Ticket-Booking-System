@@ -21,27 +21,59 @@ if "seats" not in st.session_state:
 # --------------------------
 menu = st.sidebar.radio("Navigation", ["🎟 Book Ticket", "📊 Admin Dashboard"])
 
-# =====================================================
-# BOOK TICKET PAGE
-# =====================================================
-if menu == "🎟 Book Ticket":
 
-    st.title("🎬 Movie Ticket Booking System")
 
-    col1, col2 = st.columns(2)
+import streamlit as st
 
-    with col1:
-        movie = st.selectbox("Select Movie", ["Pushpa 2", "Animal", "Jawan", "RRR", "Conjuring", "Nun2"])
-        date = st.date_input("Select Date")
-        time = st.selectbox("Select Show Time", 
-                            ["10:00 AM", "2:00 PM", "6:00 PM", "9:00 PM"])
-        name = st.text_input("Your Name")
+st.title("🎬 Movie Ticket Booking System")
 
-    with col2:
-        tickets = st.number_input("Number of Tickets", 1, 5)
-        price_per_ticket = 200
-        total_price = tickets * price_per_ticket
-        st.info(f"Total Price: ₹{total_price}")
+# Movie selection
+movies = ["Avengers", "Jawan", "Inception", "Interstellar"]
+movie = st.selectbox("Select Movie", movies)
+
+# Show time
+time = st.selectbox("Select Show Time", ["10 AM", "1 PM", "4 PM", "7 PM"])
+
+# Seat layout
+st.subheader("Select Your Seats")
+
+rows = ["A","B","C","D"]
+cols = range(1,6)
+
+selected_seats = []
+
+for r in rows:
+    cols_layout = st.columns(5)
+    for i,c in enumerate(cols):
+        seat = f"{r}{c}"
+        if cols_layout[i].checkbox(seat):
+            selected_seats.append(seat)
+
+st.write("Selected Seats:", selected_seats)
+
+# Ticket price
+price = 150
+total = price * len(selected_seats)
+
+st.write("Total Price: ₹", total)
+
+# Booking
+name = st.text_input("Enter Your Name")
+
+if st.button("Book Ticket"):
+    if name == "":
+        st.warning("Enter your name")
+    elif len(selected_seats) == 0:
+        st.warning("Please select seats")
+    else:
+        st.success("Booking Confirmed 🎉")
+        st.write("Name:", name)
+        st.write("Movie:", movie)
+        st.write("Show Time:", time)
+        st.write("Seats:", selected_seats)
+        st.write("Total Paid: ₹", total)
+
+
 
 
    # --------------------------
@@ -120,3 +152,4 @@ if menu == "📊 Admin Dashboard":
             st.success("All bookings cleared!")
 
  
+

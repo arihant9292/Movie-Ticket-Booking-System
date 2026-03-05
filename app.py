@@ -1,49 +1,135 @@
 import streamlit as st
+import pandas as pd
+from datetime import datetime
 
-# Page Title
-st.set_page_config(page_title="Movie Ticket Booking", page_icon="🎬", layout="centered")
+st.set_page_config(page_title="Movie Ticket Booking", layout="wide")
 
-st.title("🎬 Movie Ticket Booking System")
+# --------------------------
+# Dummy Database
+# --------------------------
+if "bookings" not in st.session_state:
+    st.session_state.bookings = []
 
-# Movie List
-movies = {
-    "Avengers: Endgame": 150,
-    "Pathaan": 120,
-    "Jawan": 130,
-    "Inception": 140,
-    "Interstellar": 160,
-    "conjuring": 350
-}
+if "seats" not in st.session_state:
+    rows = ["A", "B", "C", "D", "E"]
+    cols = range(1, 9)
+    st.session_state.seats = {f"{r}{c}": False for r in rows for c in cols}
 
-# Select Movie
-movie = st.selectbox("Select Movie", list(movies.keys()))
 
-# Select Show Time
-show_time = st.selectbox("Select Show Time", ["10:00 AM", "1:00 PM", "4:00 PM", "7:00 PM", "10:00 PM"])
+# --------------------------
+# Sidebar Navigation
+# --------------------------
+menu = st.sidebar.radio("Navigation", ["🎟 Book Ticket", "📊 Admin Dashboard"])
 
-# Number of Tickets
-tickets = st.number_input("Number of Tickets", min_value=1, max_value=10, step=1)
+# =====================================================
+# BOOK TICKET PAGE
+# =====================================================
+if menu == "🎟 Book Ticket":
 
-# Customer Name
-name = st.text_input("Enter Your Name")
+    st.title("🎬 Movie Ticket Booking System")
 
-# Price Calculation
-price_per_ticket = movies[movie]
-total_price = price_per_ticket * tickets
+    col1, col2 = st.columns(2)
 
-st.write(f"💰 Price per ticket: ₹{price_per_ticket}")
-st.write(f"🧾 Total Amount: ₹{total_price}")
+    with col1:
+        movie = st.selectbox("Select Movie", ["Pushpa 2", "Animal", "Jawan", "RRR"])
+        date = st.date_input("Select Date")
+        time = st.selectbox("Select Show Time", 
+                            ["10:00 AM", "2:00 PM", "6:00 PM", "9:00 PM"])
+        name = st.text_input("Your Name")
 
-# Booking Button
-if st.button("Book Ticket"):
-    if name == "":
-        st.warning("Please enter your name!")
+    with col2:
+        tickets = st.number_input("Number of Tickets", 1, 5)
+        price_per_ticket = 200
+        total_price = tickets * price_per_ticket
+        st.info(f"Total Price: ₹{total_price}")
+
+    # --------------------------
+    # Seat Layout
+    # --------------------------
+    st.subheader("🪑 Select Your Seats")
+
+    selected_seats = []
+
+    for row in ["A", "B", "C", "D", "E"]:
+        cols = st.columns(8)
+        for i, col in enumerate(cols):
+            seat_id = f"{row}{i+1}"
+            if st.session_state.seats[seat_id]:
+                col.button(seat_id, disabled=True)
+            else:
+                if col.button(seat_id):
+                    selected_seats.append(seat_id)
+
+    # --------------------------
+    # Payment Section
+    # --------------------------
+    st.subheader("💳 Payment")
+
+    payment_method = st.radio("Select Payment Method",
+                              ["UPI", "Credit Card", "Debit Card"])
+
+    if payment_method == "UPI":
+        upi_id = st.text_input("Enter UPI ID")
+
+    if payment_method in ["Credit Card", "Debit Card"]:
+        card_number = st.text_input("Card Number")
+        expiry = st.text_input("Expiry Date")
+        cvv = st.password_input("CVV")
+
+    # --------------------------
+    # Booking Button
+    # --------------------------
+    if st.button("Confirm Booking"):
+
+        if len(selected_seats) != tickets:
+            st.error("Please select exact number of seats!")
+        elif name == "":
+            st.error("Please enter your name")
+        else:
+            for seat in selected_seats:
+                st.session_state.seats[seat] = True
+
+            booking_data = {
+                "Name": name,
+                "Movie": movie,
+                "Date": date,
+                "Time": time,
+                "Seats": selected_seats,
+                "Tickets": tickets,
+                "Total Price": total_price,
+                "Payment Method": payment_method,
+                "Booking Time": datetime.now()
+            }
+
+            st.session_state.bookings.append(booking_data)
+
+            st.success("🎉 Booking Confirmed!")
+            st.balloons()
+
+
+# =====================================================
+# ADMIN DASHBOARD
+# =====================================================
+if menu == "📊 Admin Dashboard":
+
+    st.title("📊 Admin Dashboard")
+
+    if len(st.session_state.bookings) == 0:
+        st.warning("No bookings yet!")
     else:
-        st.success("🎉 Booking Confirmed!")
-        st.write("----- Booking Details -----")
-        st.write(f"Name: {name}")
-        st.write(f"Movie: {movie}")
-        st.write(f"Show Time: {show_time}")
-        st.write(f"Tickets: {tickets}")
+        df = pd.DataFrame(st.session_state.bookings)
 
-        st.write(f"Total Paid: ₹{total_price}")
+        st.subheader("📋 All Bookings")
+        st.dataframe(df)
+
+        st.subheader("📈 Total Revenue")
+        total_revenue = df["Total Price"].sum()
+        st.success(f"₹ {total_revenue}")
+
+        st.subheader("🎬 Movie-wise Bookings")
+        movie_counts = df["Movie"].value_counts()
+        st.bar_chart(movie_counts)
+
+        if st.button("Reset All Bookings"):
+            st.session_state.bookings = []
+            st.success("All bookings cleared!")

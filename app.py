@@ -16,13 +16,6 @@ if "seats" not in st.session_state:
     st.session_state.seats = {f"{r}{c}": False for r in rows for c in cols}
 
 
-# --------------------------
-# Sidebar Navigation
-# --------------------------
-menu = st.sidebar.radio("Navigation", ["🎟 Book Ticket", "📊 Admin Dashboard"])
-
-
-
 import streamlit as st
 
 st.title("🎬 Movie Ticket Booking System")
@@ -152,4 +145,5 @@ if menu == "📊 Admin Dashboard":
             st.success("All bookings cleared!")
 
  
+
 

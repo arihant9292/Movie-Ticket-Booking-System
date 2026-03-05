@@ -134,3 +134,53 @@ if menu == "📊 Admin Dashboard":
             st.session_state.bookings = []
             st.success("All bookings cleared!")
 
+
+import streamlit as st
+
+st.title("🎬 Movie Ticket Booking System")
+
+# Movie selection
+movies = ["Avengers", "Jawan", "Inception", "Interstellar"]
+movie = st.selectbox("Select Movie", movies)
+
+# Show time
+time = st.selectbox("Select Show Time", ["10 AM", "1 PM", "4 PM", "7 PM"])
+
+# Seat layout
+st.subheader("Select Your Seats")
+
+rows = ["A","B","C","D"]
+cols = range(1,6)
+
+selected_seats = []
+
+for r in rows:
+    cols_layout = st.columns(5)
+    for i,c in enumerate(cols):
+        seat = f"{r}{c}"
+        if cols_layout[i].checkbox(seat):
+            selected_seats.append(seat)
+
+st.write("Selected Seats:", selected_seats)
+
+# Ticket price
+price = 150
+total = price * len(selected_seats)
+
+st.write("Total Price: ₹", total)
+
+# Booking
+name = st.text_input("Enter Your Name")
+
+if st.button("Book Ticket"):
+    if name == "":
+        st.warning("Enter your name")
+    elif len(selected_seats) == 0:
+        st.warning("Please select seats")
+    else:
+        st.success("Booking Confirmed 🎉")
+        st.write("Name:", name)
+        st.write("Movie:", movie)
+        st.write("Show Time:", time)
+        st.write("Seats:", selected_seats)
+        st.write("Total Paid: ₹", total)
